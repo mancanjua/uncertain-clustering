@@ -17,7 +17,6 @@ def approximate_cluster(point_cloud=[]):
     for i in range (loop_times-1):
         grouped_points.append([copied_list[i*3]], [copied_list[1+i*3]], [copied_list[2+i*3]])
 
-
     for y in range (len(grouped_points)-1):
         current_group = grouped_points[y]
         center_temp = circumcenter(current_group[0], current_group[1], current_group[2])
