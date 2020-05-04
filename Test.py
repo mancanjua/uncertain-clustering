@@ -20,3 +20,11 @@ ownership = {(Point(4, 7), cluster1): 5, (Point(4, 7), cluster2): 3, (Point(2, 3
 i = Iteration(clusters=clusters, ownership=ownership)
 
 print(i)
+
+asd = (Point(1, 2), Point(1,6), Point(6,9))
+asd2 = [Point(1, 2), Point(1,6), Point(6,9)]
+
+print(asd)
+print(asd[2])
+
+print(asd2[1])
