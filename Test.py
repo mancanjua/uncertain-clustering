@@ -1,4 +1,5 @@
 from Entities import Cluster, Point, Iteration
+import Methods
 
 p = Point()
 
@@ -28,3 +29,7 @@ print(asd)
 print(asd[2])
 
 print(asd2[1])
+
+nube_puntos = [Point(1, 1), Point (1, -1), Point (-1, 1), Point (-1, -1)]
+
+print (Methods.approximate_cluster(nube_puntos))

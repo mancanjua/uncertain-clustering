@@ -10,7 +10,7 @@ class Point:
 
 class Cluster:
 
-    def __init__(self, radius=0, center=Point()):
+    def __init__(self, center=Point(), radius=0):
         self.radius = radius
         self.center = center
 
