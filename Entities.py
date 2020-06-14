@@ -5,13 +5,14 @@ class Point:
         self.y = y
 
     def __repr__(self):
-        return "("+str(self.x)+","+str(self.y)+")"
+        return "(" + str(self.x) + "," + str(self.y) + ")"
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
 
     def __hash__(self):
-        return 31*self.x + 31**2*self.y
+        return 31 * hash(self.x) + 31 ** 2 * hash(self.y)
+
 
 class Cluster:
 
@@ -20,7 +21,13 @@ class Cluster:
         self.center = center
 
     def __repr__(self):
-        return "{R: "+str(self.radius)+", C: "+str(self.center)+"}"
+        return "{R: " + str(self.radius) + ", C: " + str(self.center) + "}"
+
+    def __hash__(self):
+        return 31 * hash(self.radius) + 31 ** 2 * hash(self.center)
+
+    def __eq__(self, other):
+        return self.center == other.center and self.radius == other.radius
 
 
 class Iteration:
@@ -29,4 +36,4 @@ class Iteration:
         self.ownership = ownership
 
     def __repr__(self):
-        return "{Clusters: "+str(self.clusters)+", Ownership: "+str(self.ownership)+"}"
+        return "{Clusters: " + str(self.clusters) + ", Ownership: " + str(self.ownership) + "}"
