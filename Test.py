@@ -64,11 +64,11 @@ print(ownerships_of_p)
 
 def main():
     win = GraphWin("My Circle", 500, 500)
-    for punto in puntos2:
+    for punto in puntos1:
         p = GPoint(punto.x * 15, punto.y * 15)
         p.draw(win)
 
-    iteration_result = Methods.clustering(puntos2, 3)
+    iteration_result = Methods.clustering(puntos1, 2)
 
     clusters = iteration_result.clusters
 

@@ -31,9 +31,9 @@ class Cluster:
 
 
 class Iteration:
-    def __init__(self, clusters=[], ownership={}):
+    def __init__(self, clusters=[], belonging={}):
         self.clusters = clusters
-        self.ownership = ownership
+        self.belonging = belonging
 
     def __repr__(self):
-        return "{Clusters: " + str(self.clusters) + ", Ownership: " + str(self.ownership) + "}"
+        return "{Clusters: " + str(self.clusters) + ", Ownership: " + str(self.belonging) + "}"
