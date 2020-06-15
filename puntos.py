@@ -35,4 +35,6 @@ puntos3 = puntos1 + puntos1_modified
 
 puntos4 = puntos2 + puntos2_modified
 
+puntos5 = [Point(item.x+1, item.y+10) for item in puntos1] + [Point(item.x+23, item.y+7) for item in puntos2] + [Point(item.x+1, item.y+1) for item in puntos3] + puntos4 + puntos3
+
 

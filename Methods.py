@@ -4,6 +4,7 @@ from Entities import Cluster, Point, Iteration
 from math import ceil, sqrt
 from statistics import mean
 from random import shuffle, randint
+from time import time
 
 
 def approximate_cluster_by_groups_of_3(point_cloud=[]):
@@ -295,6 +296,8 @@ def clustering(points, number_of_clusters, iteration_limit):
     """From a point cloud and a number of clusters, apply clustering until stop condition (no updates or X
     iterations)"""
 
+    time_start = time()
+
     # TO-DO calcularlos a partir de puntos
     # min_value_cluster = 1
     # max_value_cluster = 2
@@ -331,11 +334,14 @@ def clustering(points, number_of_clusters, iteration_limit):
         old_clusters = iteration.clusters
         iteration = iterate(iteration)
         current_clusters = iteration.clusters
-        print(current_clusters)
         counter += 1
         print(counter)
         if old_clusters == current_clusters or counter == iteration_limit:
             break
+
+    time_end = time()
+
+    print ("Ended in " + str(time_end-time_start) + " ms")
 
     return iteration
 
