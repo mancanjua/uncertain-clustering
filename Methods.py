@@ -4,8 +4,6 @@ from Entities import Cluster, Point, Iteration
 from math import ceil, sqrt
 from statistics import mean
 from random import shuffle, randint
-import math
-import numpy
 
 
 def approximate_cluster_by_groups_of_3(point_cloud=[]):
@@ -193,35 +191,6 @@ def mean_points(points=[]):
     return res
 
 
-def arbitrary_function(x):
-    res = 1 / (1 + math.exp(-11 * (x - 0.5)))
-    return res
-
-
-def weighted_mean(numbers=[]):
-    """From a list of values, calculate the weighted mean of them all"""
-
-    values = [item[0] for item in numbers]
-    weights = [arbitrary_function(item[1]) for item in numbers]
-
-    res = numpy.average(values, weights=weights)
-    return res
-
-
-def weighted_mean_points(points=[]):
-    """From a point cloud, calculate the weighted mean point of them all"""
-    res = Point()
-
-    x_values = [item[0].x for item in points]
-    y_values = [item[0].y for item in points]
-    weights = [arbitrary_function(item[1]) for item in points]
-
-    x_mean = numpy.average(x_values, weights=weights)
-    y_mean = numpy.average(y_values, weights=weights)
-
-    return Point(x_mean, y_mean)
-
-
 def belonging_of_point(point, clusters=[]):
     """From a point and a list of clusters, return a dictionary with tuples of (Point, Cluster) as keys and
     the belonging of the point to the cluster as values"""
@@ -296,9 +265,6 @@ def iterate(iteration):
     # For each outdated cluster, we save it in case it doesn't update, and if has at least one point assigned,
     # we update it
     for c in clusters:
-        # belongings_of_c = {item: belongings[item] for item in belongings if item[1] == c}
-        # new_cluster = approximate_cluster_by_all_points_weighted(belongings_of_c, c)
-
         new_cluster = c
         if c in points_by_cluster:
             # new_cluster = approximate_cluster_by_all_possible_combinations(points_by_cluster[c])
@@ -316,74 +282,6 @@ def iterate(iteration):
         new_belongings.update(new_belongings_of_p)
 
     return Iteration(new_clusters, new_belongings)
-
-
-def approximate_cluster_by_all_points_weighted(belongings_of_cluster, c):
-    """From a point cloud, get all possible combinations of 3 points, for each combination calculate the cluster that
-    contains all 3 points, and get the medium of all clusters multiplied by the belonging"""
-
-    # First, we copy the point cloud to avoid modyfing the original one
-    point_list = [item[0] for item in belongings_of_cluster]
-
-    # We instantiate all lists
-    # weighted_centers = []
-    # weighted_radiuses = []
-    centers = []
-    radiuses = []
-
-    list_size = len(point_list)
-    shuffle(point_list)
-
-    # We calculate the number of groups of 3 points
-    loop_times = ceil(list_size / 3)
-
-    # We instantiate all lists
-    grouped_points = []
-
-    # For each group, we add a tuple of the 3 next points in the cloud, wrapping around if the number of points is
-    # not divisible by 3
-    for i in range(loop_times):
-        grouped_points.append((point_list[(i * 3) % list_size], point_list[(1 + i * 3) % list_size],
-                               point_list[(2 + i * 3) % list_size]))
-
-    # For each tuple of grouped points, we calculate the circumcenter and the radius and add them to their
-    # corresponding lists
-    for y in range(len(grouped_points)):
-        # We get the current group, and calculate the associated circumcenter
-        current_group = grouped_points[y]
-
-        point1 = current_group[0]
-        point2 = current_group[1]
-        point3 = current_group[2]
-        center_temp = circumcenter(point1, point2, point3)
-
-        # belonging1 = belongings_of_cluster[(point1, c)]
-        # belonging2 = belongings_of_cluster[(point2, c)]
-        # belonging3 = belongings_of_cluster[(point3, c)]
-
-        # average_belonging = (belonging1 + belonging2 + belonging3) / 3
-
-        radius_temp = distance_points(center_temp, current_group[0])
-
-        # weighted_centers.append((center_temp, average_belonging))
-        # weighted_radiuses.append((radius_temp, average_belonging))
-
-        #if (
-        #        center_temp.x < 100 and center_temp.x > 0 and center_temp.y < 100 and center_temp.y > 0 and radius_temp < 100 and radius_temp > 0):
-        #    centers.append(center_temp)
-        #    radiuses.append(radius_temp)
-
-        centers.append(center_temp)
-        radiuses.append(radius_temp)
-
-    # We calculate the mean center and radius for the result
-    # center = weighted_mean_points(weighted_centers)
-    # radius = weighted_mean(weighted_radiuses)
-
-    center = mean_points(centers)
-    radius = mean(radiuses)
-
-    return Cluster(center, radius)
 
 
 def get_key_from_value(val, dictionary):
