@@ -4,6 +4,8 @@ from Entities import Cluster, Point, Iteration
 from math import ceil, sqrt
 from statistics import mean
 from random import shuffle, randint
+import math
+import numpy
 
 
 def approximate_cluster_by_groups_of_3(point_cloud=[]):
@@ -42,6 +44,78 @@ def approximate_cluster_by_groups_of_3(point_cloud=[]):
         radiuses.append(distance_points(center_temp, current_group[0]))
 
     # We calculate the mean center and radius for the result
+    center = mean_points(centers)
+    radius = mean(radiuses)
+
+    return Cluster(center, radius)
+
+
+def approximate_cluster_by_groups_of_3_max_distance(point_cloud=[]):
+    """From a point cloud assumed to belong to a single cluster, group the points by 3, for each group calculate the
+    cluster that contains all 3 points, and get the medium of all clusters """
+
+    # First, we copy the point cloud to avoid modyfing the original one
+    copied_list = point_cloud.copy()
+
+    # We obtain the number of points
+    list_size = len(copied_list)
+
+    # We instantiate all lists
+    grouped_points = []
+    centers = []
+    radiuses = []
+
+    while list_size > 2:
+        maxdist = 0
+        bestpair = ()
+        for i in range(list_size):
+            for j in range(i + 1, list_size):
+                current_distance = distance_points(copied_list[i], copied_list[j])
+                if current_distance > maxdist:
+                    maxdist = current_distance
+                    bestpair = (copied_list[i], copied_list[j])
+
+        P = []
+        P.append(bestpair[0])
+        P.append(bestpair[1])
+
+        copied_list.remove(bestpair[0])
+        copied_list.remove(bestpair[1])
+
+        list_size = len(copied_list)
+
+        maxdist = 0
+        vbest = None
+
+        for v in range(list_size):
+            if copied_list[v] in P:
+                continue
+            for vprime in P:
+                current_vprime_distance = distance_points(copied_list[v], vprime)
+                if current_vprime_distance > maxdist:
+                    maxdist = current_vprime_distance
+                    vbest = v
+
+        vbest_point = copied_list[vbest]
+        P.append(vbest_point)
+        copied_list.remove(vbest_point)
+
+        list_size = len(copied_list)
+
+        grouped_points.append((P[0], P[1], P[2]))
+
+    # For each tuple of grouped points, we calculate the circumcenter and the radius and add them to their
+    # corresponding lists
+    for y in range(len(grouped_points)):
+        current_group = grouped_points[y]
+        center_temp = circumcenter(current_group[0], current_group[1], current_group[2])
+        centers.append(center_temp)
+        radiuses.append(distance_points(center_temp, current_group[0]))
+
+    # We calculate the mean center and radius for the result
+    if len(centers) == 0:
+        raise NameError("mismue")
+
     center = mean_points(centers)
     radius = mean(radiuses)
 
@@ -112,16 +186,40 @@ def distance_point_cluster(point, cluster):
 
 def mean_points(points=[]):
     """From a point cloud, calculate the mean point of them all"""
-    res = Point()
-
-    for p in points:
-        res.x += p.x
-        res.y += p.y
-
-    res.x /= len(points)
-    res.y /= len(points)
+    all_x = [item.x for item in points]
+    all_y = [item.y for item in points]
+    res = Point(mean(all_x), mean(all_y))
 
     return res
+
+
+def arbitrary_function(x):
+    res = 1 / (1 + math.exp(-11 * (x - 0.5)))
+    return res
+
+
+def weighted_mean(numbers=[]):
+    """From a list of values, calculate the weighted mean of them all"""
+
+    values = [item[0] for item in numbers]
+    weights = [arbitrary_function(item[1]) for item in numbers]
+
+    res = numpy.average(values, weights=weights)
+    return res
+
+
+def weighted_mean_points(points=[]):
+    """From a point cloud, calculate the weighted mean point of them all"""
+    res = Point()
+
+    x_values = [item[0].x for item in points]
+    y_values = [item[0].y for item in points]
+    weights = [arbitrary_function(item[1]) for item in points]
+
+    x_mean = numpy.average(x_values, weights=weights)
+    y_mean = numpy.average(y_values, weights=weights)
+
+    return Point(x_mean, y_mean)
 
 
 def belonging_of_point(point, clusters=[]):
@@ -171,7 +269,7 @@ def iterate(iteration):
     belongings = iteration.belonging
 
     # From it, we obtain the point cloud and the previous cluster list
-    points = [item[0] for item in belongings.keys()]
+    points = {item[0] for item in belongings.keys()}
     clusters = iteration.clusters
 
     # We instantiante a dictionary with each cluster as the key, and the list of points that belong to it as value
@@ -195,16 +293,24 @@ def iterate(iteration):
     # We instantiate the list of updated clusters
     new_clusters = []
 
-    # For each outdated cluster, we
+    # For each outdated cluster, we save it in case it doesn't update, and if has at least one point assigned,
+    # we update it
     for c in clusters:
+        # belongings_of_c = {item: belongings[item] for item in belongings if item[1] == c}
+        # new_cluster = approximate_cluster_by_all_points_weighted(belongings_of_c, c)
+
         new_cluster = c
         if c in points_by_cluster:
             # new_cluster = approximate_cluster_by_all_possible_combinations(points_by_cluster[c])
-            new_cluster = approximate_cluster_by_groups_of_3(points_by_cluster[c])
+            # new_cluster = approximate_cluster_by_groups_of_3(points_by_cluster[c])
+            if len(points_by_cluster[c]) > 2:
+                new_cluster = approximate_cluster_by_groups_of_3_max_distance(points_by_cluster[c])
         new_clusters.append(new_cluster)
 
+    # We instantiate the list of updated belongings
     new_belongings = {}
 
+    # For each point, we calculate the dictionary of belongings of p and add them to the dictionary of all belongings
     for p in points:
         new_belongings_of_p = belonging_of_point(p, new_clusters)
         new_belongings.update(new_belongings_of_p)
@@ -212,38 +318,125 @@ def iterate(iteration):
     return Iteration(new_clusters, new_belongings)
 
 
+def approximate_cluster_by_all_points_weighted(belongings_of_cluster, c):
+    """From a point cloud, get all possible combinations of 3 points, for each combination calculate the cluster that
+    contains all 3 points, and get the medium of all clusters multiplied by the belonging"""
+
+    # First, we copy the point cloud to avoid modyfing the original one
+    point_list = [item[0] for item in belongings_of_cluster]
+
+    # We instantiate all lists
+    # weighted_centers = []
+    # weighted_radiuses = []
+    centers = []
+    radiuses = []
+
+    list_size = len(point_list)
+    shuffle(point_list)
+
+    # We calculate the number of groups of 3 points
+    loop_times = ceil(list_size / 3)
+
+    # We instantiate all lists
+    grouped_points = []
+
+    # For each group, we add a tuple of the 3 next points in the cloud, wrapping around if the number of points is
+    # not divisible by 3
+    for i in range(loop_times):
+        grouped_points.append((point_list[(i * 3) % list_size], point_list[(1 + i * 3) % list_size],
+                               point_list[(2 + i * 3) % list_size]))
+
+    # For each tuple of grouped points, we calculate the circumcenter and the radius and add them to their
+    # corresponding lists
+    for y in range(len(grouped_points)):
+        # We get the current group, and calculate the associated circumcenter
+        current_group = grouped_points[y]
+
+        point1 = current_group[0]
+        point2 = current_group[1]
+        point3 = current_group[2]
+        center_temp = circumcenter(point1, point2, point3)
+
+        # belonging1 = belongings_of_cluster[(point1, c)]
+        # belonging2 = belongings_of_cluster[(point2, c)]
+        # belonging3 = belongings_of_cluster[(point3, c)]
+
+        # average_belonging = (belonging1 + belonging2 + belonging3) / 3
+
+        radius_temp = distance_points(center_temp, current_group[0])
+
+        # weighted_centers.append((center_temp, average_belonging))
+        # weighted_radiuses.append((radius_temp, average_belonging))
+
+        #if (
+        #        center_temp.x < 100 and center_temp.x > 0 and center_temp.y < 100 and center_temp.y > 0 and radius_temp < 100 and radius_temp > 0):
+        #    centers.append(center_temp)
+        #    radiuses.append(radius_temp)
+
+        centers.append(center_temp)
+        radiuses.append(radius_temp)
+
+    # We calculate the mean center and radius for the result
+    # center = weighted_mean_points(weighted_centers)
+    # radius = weighted_mean(weighted_radiuses)
+
+    center = mean_points(centers)
+    radius = mean(radiuses)
+
+    return Cluster(center, radius)
+
+
 def get_key_from_value(val, dictionary):
+    """From a dictionary and a value, return the key assigned to it"""
     for key, value in dictionary.items():
         if val == value:
             return key
 
 
-def clustering(puntos, number_of_clusters):
-    # TODO calcularlos a partir de puntos
+def clustering(points, number_of_clusters, iteration_limit):
+    """From a point cloud and a number of clusters, apply clustering until stop condition (no updates or X
+    iterations)"""
+
+    # TO-DO calcularlos a partir de puntos
     # min_value_cluster = 1
     # max_value_cluster = 2
-    # clusters_iniciales = random_clusters(number_of_clusters, min_value_cluster, max_value_cluster)
-    clusters_iniciales = heuristic_initial_clusters(puntos, number_of_clusters)
-    belongings_iniciales = {}
-    for p in puntos:
-        belongings_iniciales.update(belonging_of_point(p, clusters_iniciales))
+    # initial_clusters = random_clusters(number_of_clusters, min_value_cluster, max_value_cluster)
 
-    iteracion0 = Iteration(clusters_iniciales, belongings_iniciales)
-    old_clusters = clusters_iniciales
+    # We calculate the initial clusters via heuristic method
+    initial_clusters = heuristic_initial_clusters(points, number_of_clusters)
+
+    print("Initial Clusters:")
+    print (initial_clusters)
+
+    # We instantiate the initial dictionary of belongings
+    initial_belongings = {}
+
+    # For each point, we calculate and add the belongings of p to the initial clusters
+    for p in points:
+        initial_belongings.update(belonging_of_point(p, initial_clusters))
+
+    # We instantiate the first iteration
+    iteration0 = Iteration(initial_clusters, initial_belongings)
+
+    # We instantiate the outdated and updated clusters lists
+    old_clusters = []
     current_clusters = []
-    iteration = iteracion0
+
+    # We instantiate the loop iteration and counter for the stop condition
+    iteration = iteration0
     counter = 0
+
+    # We iterate until there are no modifications for any clusters, or we have reached the iteration limit
     while True:
 
+        # We
         old_clusters = iteration.clusters
-
         iteration = iterate(iteration)
-
         current_clusters = iteration.clusters
         print(current_clusters)
-        counter+=1
+        counter += 1
         print(counter)
-        if old_clusters == current_clusters or counter == 2000:
+        if old_clusters == current_clusters or counter == iteration_limit:
             break
 
     return iteration
@@ -262,16 +455,16 @@ def heuristic_initial_clusters(points, number_of_clusters):
     range_y = max_y - min_y
 
     if range_x > range_y:
-        sorted(points, key=lambda point: point.x)
+        sorted_points = sorted(points, key=lambda point: point.x)
     else:
-        sorted(points, key=lambda point: point.y)
+        sorted_points = sorted(points, key=lambda point: point.y)
 
-    grouped_points = chunkIt(points, number_of_clusters)
+    grouped_points = chunkIt(sorted_points, number_of_clusters)
 
     clusters = []
 
     for group in grouped_points:
-        clusters.append(approximate_cluster_by_all_possible_combinations(group))
+        clusters.append(approximate_cluster_by_groups_of_3(group))
 
     return clusters
 

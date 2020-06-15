@@ -2,7 +2,7 @@ from Entities import Cluster, Point, Iteration
 import Methods
 from graphics import Circle, GraphWin, Point as GPoint
 import itertools
-from puntos import puntos1, puntos2, puntos0
+from puntos import puntos1, puntos2, puntos0, puntos3, puntos4
 
 """
 
@@ -63,17 +63,18 @@ print(ownerships_of_p)
 
 
 def main():
-    win = GraphWin("My Circle", 500, 500)
-    for punto in puntos1:
-        p = GPoint(punto.x * 15, punto.y * 15)
+    win = GraphWin("My Circle", 1400, 800)
+    displacement = 20
+    for punto in puntos4:
+        p = GPoint(punto.x * displacement, punto.y * displacement)
         p.draw(win)
 
-    iteration_result = Methods.clustering(puntos1, 2)
+    iteration_result = Methods.clustering(puntos4, 6, 1000)
 
     clusters = iteration_result.clusters
 
     for c in clusters:
-        c = Circle(GPoint(c.center.x* 15, c.center.y* 15), c.radius* 15)
+        c = Circle(GPoint(c.center.x * displacement, c.center.y * displacement), c.radius * displacement)
         c.draw(win)
 
     win.getMouse()
@@ -81,3 +82,4 @@ def main():
 
 
 main()
+

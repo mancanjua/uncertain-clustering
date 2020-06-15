@@ -26,3 +26,13 @@ puntos2 = [Point(9, 8), Point(7, 7.3), Point(6, 5), Point(12, 5), Point(9, 2), P
            Point(11.6, 6.6), Point(11.7, 6.3), Point(11.8, 6), Point(11.9, 5.7), Point(12, 4.6), Point(11.9, 4.2), Point(11.8, 3.8), Point(11.6, 3.5),
            Point(10.5, 2.4), Point(8.2, 2.1), Point(7.4, 2.5), Point(6.1, 4.2), Point(8, 6.7), Point(7.2, 6), Point(7.1, 5.6), Point(7, 4.6), Point(7.1, 4.3),
            Point(7.7, 3.5), Point(8, 3.3), Point(8.3, 3.1), Point(9.5, 3.1), Point(10.8, 4.2), Point(10.8, 5.9), Point(9.8, 6.8)]
+
+puntos1_modified = [Point(item.x+1.5, item.y+1.5) for item in puntos1]
+
+puntos2_modified = [Point(item.x+1, item.y+10) for item in puntos2]
+
+puntos3 = puntos1 + puntos1_modified
+
+puntos4 = puntos2 + puntos2_modified
+
+
