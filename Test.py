@@ -2,7 +2,9 @@ from Entities import Cluster, Point, Iteration
 import Methods
 from graphics import Circle, GraphWin, Point as GPoint
 import itertools
+import random
 from puntos import *
+from math import *
 
 """
 
@@ -62,14 +64,48 @@ print(ownerships_of_p)
 """
 
 
+def create_random_circle(center, radius, quantity, noise):
+    points = []
+
+    for i in range(int(quantity)):
+        theta = random.random() * 2 * pi
+        noise_x = (random.random() - 0.5) * noise
+        noise_y = (random.random() - 0.5) * noise
+        point = Point(cos(theta) * radius + noise_x + center.x, sin(theta) * radius + noise_y + center.y)
+        points.append(point)
+
+    return points
+
+
+def create_random_point_cloud(number_of_circles, noise, min_val, max_val, max_points_per_circle):
+    point_cloud = []
+    val_range = max_val - min_val
+
+    for i in range(number_of_circles):
+        random_center_x = random.random() * val_range
+        random_center_y = random.random() * val_range
+        random_center = Point(random_center_x, random_center_y)
+        random_radius = random.random() * val_range
+        random_points_per_circle = (random.random() + 0.5) * max_points_per_circle
+        current_circle = create_random_circle(random_center, random_radius, random_points_per_circle, noise)
+
+        point_cloud += current_circle
+
+    return point_cloud
+
+
 def main():
-    win = GraphWin("My Circle", 1400, 800)
+    win = GraphWin("Results", 1400, 800)
     displacement = 20
-    for punto in puntos5:
+    puntos_random = create_random_point_cloud(2, 0.2, 200, 250, 50)
+
+    #Puntos elegidos
+    chosen_points = puntos4
+    for punto in chosen_points:
         p = GPoint(punto.x * displacement, punto.y * displacement)
         p.draw(win)
 
-    iteration_result = Methods.clustering(puntos5, 20, 5000)
+    iteration_result = Methods.clustering(chosen_points, 6, 200)
 
     clusters = iteration_result.clusters
 

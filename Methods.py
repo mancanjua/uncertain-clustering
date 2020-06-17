@@ -335,7 +335,7 @@ def clustering(points, number_of_clusters, iteration_limit):
         iteration = iterate(iteration)
         current_clusters = iteration.clusters
         counter += 1
-        print(counter)
+        print("Iteration "+str(counter)+": "+str(current_clusters))
         if old_clusters == current_clusters or counter == iteration_limit:
             break
 
@@ -368,7 +368,7 @@ def heuristic_initial_clusters(points, number_of_clusters):
     clusters = []
 
     for group in grouped_points:
-        clusters.append(approximate_cluster_by_groups_of_3(group))
+        clusters.append(approximate_cluster_by_groups_of_3_max_distance(group))
 
     return clusters
 
