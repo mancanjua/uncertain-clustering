@@ -5,63 +5,9 @@ import itertools
 import random
 from puntos import *
 from math import *
+from time import time
+from statistics import mean
 
-"""
-
-p = Point()
-
-print(p)
-
-c1 = Cluster()
-print(c1)
-
-p = Point(1, 2)
-
-print(p)
-
-cluster1 = Cluster(radius=5, center=Point(1, 2))
-cluster2 = Cluster(radius=2, center=Point(6, 9))
-
-clusters = [cluster1, cluster2]
-ownership = {(Point(4, 7), cluster1): 5, (Point(4, 7), cluster2): 3, (Point(2, 3), cluster1): 2,
-             (Point(2, 3), cluster2): 10}
-
-i = Iteration(clusters=clusters, ownership=ownership)
-
-print(i)
-
-asd = (Point(1, 2), Point(1, 6), Point(6, 9))
-asd2 = [Point(1, 2), Point(1, 6), Point(6, 9)]
-
-print(asd)
-print(asd[2])
-
-print(asd2[1])
-
-nube_puntos = [Point(1, 1), Point(1, -1), Point(-1, 1), Point(-1, -1)]
-
-print(Methods.approximate_cluster_by_groups_of_3(nube_puntos))
-
-print(Methods.approximate_cluster_by_all_possible_combinations(nube_puntos))
-
-print("patata")
-print(Methods.distance_point_cluster(p, cluster1))
-print(Methods.distance_point_cluster(p, cluster2))
-print(Methods.ownership_of_point(p, clusters))
-
-print("patta2")
-print(Methods.random_clusters(3, 0, 5))
-
-print("patata3")
-ownerships_of_p = {item: ownership[item] for item in ownership if item[0] == Point(4, 7)}
-print(ownerships_of_p)
-
-
-# TODO (test shit)
-# Crear una iteration por los jajas
-# Y testearla con Methods.iterate()
-
-"""
 
 def create_random_circle(center, radius, quantity, noise):
     points = []
@@ -78,6 +24,7 @@ def create_random_circle(center, radius, quantity, noise):
 
 def create_random_point_cloud(number_of_circles, noise, min_val, max_val, max_points_per_circle):
     point_cloud = []
+    solutions = []
     val_range = max_val - min_val
 
     for i in range(number_of_circles):
@@ -89,8 +36,20 @@ def create_random_point_cloud(number_of_circles, noise, min_val, max_val, max_po
         current_circle = create_random_circle(random_center, random_radius, random_points_per_circle, noise)
 
         point_cloud += current_circle
+        solutions.append(Cluster(random_center, random_radius))
 
-    return point_cloud
+    res = (point_cloud, solutions)
+
+    return res
+
+
+def get_method_name (method_number):
+    if method_number == 1:
+        return "Random Initial Clusters"
+    elif method_number == 2:
+        return "Heuristic Initial Clusters"
+    else:
+        return "Heuristic Initial Clusters w/ max distance"
 
 
 def main():
@@ -99,12 +58,16 @@ def main():
     puntos_random = create_random_point_cloud(2, 0.2, 200, 250, 50)
 
     #Puntos elegidos
-    chosen_points = puntos3
-    for punto in chosen_points:
+    chosen_points = puntos2
+    method = Methods.method_random_initial_clusters
+
+    points = chosen_points[0]
+    solution = chosen_points[1]
+    for punto in points:
         p = GPoint(punto.x * displacement, punto.y * displacement)
         p.draw(win)
 
-    iteration_result = Methods.clustering(chosen_points, 4, 5000, Methods.method_heuristic_initial_clusters)
+    iteration_result = Methods.clustering(chosen_points, len(chosen_points[1]), 100, method)
 
     clusters = iteration_result.clusters
 
@@ -112,11 +75,47 @@ def main():
         c = Circle(GPoint(c.center.x * displacement, c.center.y * displacement), c.radius * displacement)
         c.draw(win)
 
+    print(Methods.compare_results(clusters, solution))
+
     try:
         win.getMouse()
         win.close()
     except:
         return 0
 
+def main_iterable ():
+    number_of_tries = 100
+    error_list = []
 
-main()
+    time_start = time()
+
+    # Puntos elegidos
+    chosen_points = puntos2
+    method = Methods.method_heuristic_initial_clusters_max_dist
+
+    for i in range(number_of_tries):
+        solution = chosen_points[1]
+
+        iteration_result = Methods.clustering(chosen_points, len(chosen_points[1]), 50, method)
+
+        clusters = iteration_result.clusters
+
+        errors = Methods.compare_results(clusters, solution)
+
+        error_list.append(errors)
+
+    time_end = time()
+
+    time_range = time_end-time_start
+
+    print("-----------------------------")
+    print("Method used: "+get_method_name(method))
+    print("Results after "+str(number_of_tries)+" iterations:")
+    print("Total time: "+str(time_range)+" s")
+    print("Max error: "+str(max([item[1] for item in error_list])))
+    print("Min error: "+str(min([item[2] for item in error_list])))
+    print("Median error: "+str(mean([item[0] for item in error_list])))
+
+#main()
+
+main_iterable()

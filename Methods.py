@@ -3,7 +3,7 @@ from typing import Final
 
 from Entities import Cluster, Point, Iteration
 from math import ceil, sqrt
-from statistics import mean
+from statistics import median, mean
 from random import shuffle, randint
 from time import time
 
@@ -280,6 +280,16 @@ def iterate(iteration):
             # new_cluster = approximate_cluster_by_groups_of_3(points_by_cluster[c])
             if len(points_by_cluster[c]) > 2:
                 new_cluster = approximate_cluster_by_groups_of_3_max_distance(points_by_cluster[c])
+
+                #Test ----------
+
+                for i in range (20):
+                    if new_cluster.center.x > 50 or new_cluster.center.y > 50 or new_cluster.radius > 50 or new_cluster.center.x < 0 or new_cluster.center.y < 0 or new_cluster.radius < 0:
+                        new_cluster = approximate_cluster_by_groups_of_3(points_by_cluster[c])
+
+                #--------------
+
+
         new_clusters.append(new_cluster)
 
     # We instantiate the list of updated belongings
@@ -300,20 +310,32 @@ def get_key_from_value(val, dictionary):
             return key
 
 
-def clustering(points, number_of_clusters, iteration_limit, method_chosen):
+def clustering(point_cloud, number_of_clusters, iteration_limit, method_chosen):
     """From a point cloud and a number of clusters, apply clustering until stop condition (no updates or X
     iterations)"""
 
     time_start = time()
 
+    points = point_cloud[0]
+    solution = point_cloud[1]
+
     if method_chosen == method_random_initial_clusters:
-        initial_clusters = random_clusters(number_of_clusters, 1, 11)
+
+        all_x = [item.x for item in points]
+        all_y = [item.y for item in points]
+
+        coord_values = []
+        coord_values.append(max(all_x))
+        coord_values.append(max(all_y))
+        coord_values.append(min(all_x))
+        coord_values.append(min(all_y))
+
+        initial_clusters = random_clusters(number_of_clusters, min(coord_values), max(coord_values))
     else:
         initial_clusters = heuristic_initial_clusters(points, number_of_clusters, method_chosen)
 
-
     print("Initial Clusters:")
-    print (initial_clusters)
+    print(initial_clusters)
 
     # We instantiate the initial dictionary of belongings
     initial_belongings = {}
@@ -341,18 +363,21 @@ def clustering(points, number_of_clusters, iteration_limit, method_chosen):
         iteration = iterate(iteration)
         current_clusters = iteration.clusters
         counter += 1
-        print("Iteration "+str(counter)+": "+str(current_clusters))
+        print("Iteration " + str(counter) + ": " + str(current_clusters))
         if old_clusters == current_clusters or counter == iteration_limit:
             break
 
     time_end = time()
 
-    print ("Ended in " + str(time_end-time_start) + " s")
+    print("Ended in " + str(time_end - time_start) + " s")
 
     return iteration
 
 
 def heuristic_initial_clusters(points, number_of_clusters, method_chosen):
+    """From a list of points, a number of clusters and a method (normal or max distance), create a list of clusters
+    via """
+
     all_x = [item.x for item in points]
     all_y = [item.y for item in points]
 
@@ -383,6 +408,7 @@ def heuristic_initial_clusters(points, number_of_clusters, method_chosen):
 
 
 def chunkIt(seq, num):
+    """From a list and a number, create a list of tuples from the list with the given number as the tuple size"""
     avg = len(seq) / float(num)
     out = []
     last = 0.0
@@ -392,3 +418,69 @@ def chunkIt(seq, num):
         last += avg
 
     return out
+
+
+def compare_results(algorithm_result, solution):
+    """From a result and a solution, calculate the mean and maximum error of the result"""
+    if len(algorithm_result) != len(solution):
+        raise ValueError("The length of both lists isn't the same")
+
+    grouped_clusters = group_clusters(algorithm_result, solution)
+
+    result_differences = [cluster_difference(item[0], item[1]) for item in grouped_clusters]
+
+    median_error = median(result_differences)
+    max_error = max(result_differences)
+    min_error = min(result_differences)
+
+
+    res = (median_error, max_error, min_error)
+
+    return res
+
+
+def group_clusters(algorithm_result, solution):
+    """From a result and a solution, group every result cluster to it's closest solution cluster"""
+
+    result_copy = algorithm_result
+    grouped_clusters = []
+
+    group_dictionary = {}
+
+    for cluster in solution:
+        #closest_cluster = None
+
+        keys = [(result_cluster, cluster) for result_cluster in result_copy]
+
+        for key in keys:
+            group_dictionary[key] = cluster_difference(key[0], key[1])
+
+    sorted(group_dictionary.keys(), key=group_dictionary.get)
+
+    sorted_keys = group_dictionary.keys()
+
+    for key in sorted_keys:
+
+        grouped_clusters.append(key)
+
+        selected_solution_cluster = key[1]
+
+        keys_to_delete = {(result_cluster, selected_solution_cluster) for result_cluster in result_copy}
+
+        sorted_keys -= keys_to_delete
+
+    return grouped_clusters
+
+
+def cluster_difference(approximated_cluster, real_cluster):
+    """Difference between two clusters calculated from the sum of the distance between
+    centers and the difference of radius"""
+
+    res = 0
+
+    res += distance_points(approximated_cluster.center, real_cluster.center)
+    #res += abs(approximated_cluster.center.x - real_cluster.center.x)
+    #res += abs(approximated_cluster.center.y - real_cluster.center.y)
+    res += abs(approximated_cluster.radius - real_cluster.radius)
+
+    return res
