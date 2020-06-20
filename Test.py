@@ -63,7 +63,6 @@ print(ownerships_of_p)
 
 """
 
-
 def create_random_circle(center, radius, quantity, noise):
     points = []
 
@@ -100,12 +99,12 @@ def main():
     puntos_random = create_random_point_cloud(2, 0.2, 200, 250, 50)
 
     #Puntos elegidos
-    chosen_points = puntos4
+    chosen_points = puntos3
     for punto in chosen_points:
         p = GPoint(punto.x * displacement, punto.y * displacement)
         p.draw(win)
 
-    iteration_result = Methods.clustering(chosen_points, 6, 200)
+    iteration_result = Methods.clustering(chosen_points, 4, 5000, Methods.method_heuristic_initial_clusters)
 
     clusters = iteration_result.clusters
 
