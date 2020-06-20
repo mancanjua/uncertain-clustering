@@ -1,10 +1,15 @@
 import itertools
+from typing import Final
 
 from Entities import Cluster, Point, Iteration
 from math import ceil, sqrt
 from statistics import mean
 from random import shuffle, randint
 from time import time
+
+method_random_initial_clusters: Final = 1
+method_heuristic_initial_clusters: Final = 2
+method_heuristic_initial_clusters_max_dist: Final = 3
 
 
 def approximate_cluster_by_groups_of_3(point_cloud=[]):
