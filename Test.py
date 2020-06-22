@@ -14,9 +14,7 @@ def create_random_circle(center, radius, quantity, noise):
 
     for i in range(int(quantity)):
         theta = random.random() * 2 * pi
-        noise_x = (random.random() - 0.5) * noise
-        noise_y = (random.random() - 0.5) * noise
-        point = Point(cos(theta) * radius + noise_x + center.x, sin(theta) * radius + noise_y + center.y)
+        point = Point(cos(theta) * (radius + (random.random() - 0.5) * noise) + center.x, sin(theta) * (radius + (random.random() - 0.5) * noise) + center.y)
         points.append(point)
 
     return points
@@ -53,13 +51,13 @@ def get_method_name (method_number):
 
 
 def main():
-    win = GraphWin("Results", 1400, 800)
+    win = GraphWin("Results", 800, 600)
     displacement = 20
-    puntos_random = create_random_point_cloud(2, 0.2, 200, 250, 50)
+    puntos_random = create_random_point_cloud(3, 0.1, 1, 10, 20)
 
     #Puntos elegidos
-    chosen_points = puntos2
-    method = Methods.method_random_initial_clusters
+    chosen_points = puntos_random
+    method = Methods.method_heuristic_initial_clusters_max_dist
 
     points = chosen_points[0]
     solution = chosen_points[1]
@@ -90,8 +88,9 @@ def main_iterable ():
     time_start = time()
 
     # Puntos elegidos
-    chosen_points = puntos2
-    method = Methods.method_heuristic_initial_clusters_max_dist
+    puntos_random = create_random_point_cloud(3, 1, 1, 10, 20)
+    chosen_points = puntos_random
+    method = Methods.method_random_initial_clusters
 
     for i in range(number_of_tries):
         solution = chosen_points[1]
@@ -116,6 +115,6 @@ def main_iterable ():
     print("Min error: "+str(min([item[2] for item in error_list])))
     print("Median error: "+str(mean([item[0] for item in error_list])))
 
-#main()
+main()
 
-main_iterable()
+#main_iterable()

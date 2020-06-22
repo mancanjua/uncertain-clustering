@@ -69,6 +69,7 @@ def approximate_cluster_by_groups_of_3_max_distance(point_cloud=[]):
     centers = []
     radiuses = []
 
+    # While the list contains enough points for another group
     while list_size > 2:
         maxdist = 0
         bestpair = ()
@@ -92,8 +93,6 @@ def approximate_cluster_by_groups_of_3_max_distance(point_cloud=[]):
         vbest = None
 
         for v in range(list_size):
-            if copied_list[v] in P:
-                continue
             for vprime in P:
                 current_vprime_distance = distance_points(copied_list[v], vprime)
                 if current_vprime_distance > maxdist:
@@ -212,10 +211,6 @@ def belonging_of_point(point, clusters):
         belongings_by_cluster[(point, c)] = current_belonging
         sum_of_belongings += current_belonging
 
-    # We instantiate and calculate the sum of all the belongings
-    for i in belongings_by_cluster:
-        sum_of_belongings += belongings_by_cluster[i]
-
     # We normalise the all the belongings
     for c in clusters:
         belongings_by_cluster[(point, c)] = 1 - belongings_by_cluster[(point, c)] / sum_of_belongings
@@ -230,10 +225,13 @@ def random_clusters(size, min_val, max_val):
     # We instantiate the list of clusters
     clusters = []
 
+    min_val_int = int(min_val)
+    max_val_int = int(max_val)
+
     # For each randomized cluster, we create a random center and a random radius, and add the new cluster to the list
     for i in range(size):
-        center = Point(randint(min_val, max_val), randint(min_val, max_val))
-        radius = randint(min_val, max_val)
+        center = Point(randint(min_val_int, max_val_int), randint(min_val_int, max_val_int))
+        radius = randint(min_val_int, max_val_int)
         cluster = Cluster(center, radius)
         clusters.append(cluster)
 
@@ -358,7 +356,6 @@ def clustering(point_cloud, number_of_clusters, iteration_limit, method_chosen):
     # We iterate until there are no modifications for any clusters, or we have reached the iteration limit
     while True:
 
-        # We
         old_clusters = iteration.clusters
         iteration = iterate(iteration)
         current_clusters = iteration.clusters
@@ -408,7 +405,7 @@ def heuristic_initial_clusters(points, number_of_clusters, method_chosen):
 
 
 def chunkIt(seq, num):
-    """From a list and a number, create a list of tuples from the list with the given number as the tuple size"""
+    """From a list and a number, create a list of tuples from the list with the given number as the list size"""
     avg = len(seq) / float(num)
     out = []
     last = 0.0
