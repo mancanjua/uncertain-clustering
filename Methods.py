@@ -12,7 +12,7 @@ method_heuristic_initial_clusters: Final = 2
 method_heuristic_initial_clusters_max_dist: Final = 3
 
 
-def approximate_cluster_by_groups_of_3(point_cloud=[]):
+def approximate_cluster_by_groups_of_3(point_cloud):
     """From a point cloud assumed to belong to a single cluster, group the points by 3, for each group calculate the
     cluster that contains all 3 points, and get the medium of all clusters """
 
@@ -54,7 +54,7 @@ def approximate_cluster_by_groups_of_3(point_cloud=[]):
     return Cluster(center, radius)
 
 
-def approximate_cluster_by_groups_of_3_max_distance(point_cloud=[]):
+def approximate_cluster_by_groups_of_3_max_distance(point_cloud):
     """From a point cloud assumed to belong to a single cluster, group the points by 3, for each group calculate the
     cluster that contains all 3 points, and get the medium of all clusters """
 
@@ -122,7 +122,7 @@ def approximate_cluster_by_groups_of_3_max_distance(point_cloud=[]):
     return Cluster(center, radius)
 
 
-def approximate_cluster_by_all_possible_combinations(point_cloud=[]):
+def approximate_cluster_by_all_possible_combinations(point_cloud):
     """From a point cloud assumed to belong to a single cluster, get all possible combinations of 3 points, for each"""
     """combination calculate the cluster that contains all 3 points, and get the medium of all clusters"""
 
@@ -274,19 +274,11 @@ def iterate(iteration):
     for c in clusters:
         new_cluster = c
         if c in points_by_cluster:
-            # new_cluster = approximate_cluster_by_all_possible_combinations(points_by_cluster[c])
-            # new_cluster = approximate_cluster_by_groups_of_3(points_by_cluster[c])
             if len(points_by_cluster[c]) > 2:
                 new_cluster = approximate_cluster_by_groups_of_3_max_distance(points_by_cluster[c])
-
-                #Test ----------
-
-                for i in range (20):
-                    if new_cluster.center.x > 50 or new_cluster.center.y > 50 or new_cluster.radius > 50 or new_cluster.center.x < 0 or new_cluster.center.y < 0 or new_cluster.radius < 0:
-                        new_cluster = approximate_cluster_by_groups_of_3(points_by_cluster[c])
-
-                #--------------
-
+                # for i in range(20):
+                #    if new_cluster.center.x > 50 or new_cluster.center.y > 50 or new_cluster.radius > 50 or new_cluster.center.x < 0 or new_cluster.center.y < 0 or new_cluster.radius < 0:
+                #        new_cluster = approximate_cluster_by_groups_of_3(points_by_cluster[c])
 
         new_clusters.append(new_cluster)
 
@@ -308,25 +300,18 @@ def get_key_from_value(val, dictionary):
             return key
 
 
-def clustering(point_cloud, number_of_clusters, iteration_limit, method_chosen):
+def clustering(points, number_of_clusters, iteration_limit, method_chosen):
     """From a point cloud and a number of clusters, apply clustering until stop condition (no updates or X
     iterations)"""
 
     time_start = time()
-
-    points = point_cloud[0]
-    solution = point_cloud[1]
 
     if method_chosen == method_random_initial_clusters:
 
         all_x = [item.x for item in points]
         all_y = [item.y for item in points]
 
-        coord_values = []
-        coord_values.append(max(all_x))
-        coord_values.append(max(all_y))
-        coord_values.append(min(all_x))
-        coord_values.append(min(all_y))
+        coord_values = [max(all_x), max(all_y), min(all_x), min(all_y)]
 
         initial_clusters = random_clusters(number_of_clusters, min(coord_values), max(coord_values))
     else:
@@ -355,12 +340,14 @@ def clustering(point_cloud, number_of_clusters, iteration_limit, method_chosen):
 
     # We iterate until there are no modifications for any clusters, or we have reached the iteration limit
     while True:
-
         old_clusters = iteration.clusters
         iteration = iterate(iteration)
         current_clusters = iteration.clusters
+
         counter += 1
+
         print("Iteration " + str(counter) + ": " + str(current_clusters))
+
         if old_clusters == current_clusters or counter == iteration_limit:
             break
 
@@ -430,7 +417,6 @@ def compare_results(algorithm_result, solution):
     max_error = max(result_differences)
     min_error = min(result_differences)
 
-
     res = (median_error, max_error, min_error)
 
     return res
@@ -445,8 +431,6 @@ def group_clusters(algorithm_result, solution):
     group_dictionary = {}
 
     for cluster in solution:
-        #closest_cluster = None
-
         keys = [(result_cluster, cluster) for result_cluster in result_copy]
 
         for key in keys:
@@ -457,7 +441,6 @@ def group_clusters(algorithm_result, solution):
     sorted_keys = group_dictionary.keys()
 
     for key in sorted_keys:
-
         grouped_clusters.append(key)
 
         selected_solution_cluster = key[1]
@@ -476,8 +459,6 @@ def cluster_difference(approximated_cluster, real_cluster):
     res = 0
 
     res += distance_points(approximated_cluster.center, real_cluster.center)
-    #res += abs(approximated_cluster.center.x - real_cluster.center.x)
-    #res += abs(approximated_cluster.center.y - real_cluster.center.y)
     res += abs(approximated_cluster.radius - real_cluster.radius)
 
     return res

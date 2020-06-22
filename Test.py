@@ -14,7 +14,8 @@ def create_random_circle(center, radius, quantity, noise):
 
     for i in range(int(quantity)):
         theta = random.random() * 2 * pi
-        point = Point(cos(theta) * (radius + (random.random() - 0.5) * noise) + center.x, sin(theta) * (radius + (random.random() - 0.5) * noise) + center.y)
+        point = Point(cos(theta) * (radius + (random.random() - 0.5) * noise) + center.x,
+                      sin(theta) * (radius + (random.random() - 0.5) * noise) + center.y)
         points.append(point)
 
     return points
@@ -41,7 +42,7 @@ def create_random_point_cloud(number_of_circles, noise, min_val, max_val, max_po
     return res
 
 
-def get_method_name (method_number):
+def get_method_name(method_number):
     if method_number == 1:
         return "Random Initial Clusters"
     elif method_number == 2:
@@ -50,22 +51,18 @@ def get_method_name (method_number):
         return "Heuristic Initial Clusters w/ max distance"
 
 
-def main():
+def test(data, max_iterations=100, method=Methods.method_heuristic_initial_clusters_max_dist):
     win = GraphWin("Results", 800, 600)
     displacement = 20
-    puntos_random = create_random_point_cloud(3, 0.1, 1, 10, 20)
 
-    #Puntos elegidos
-    chosen_points = puntos_random
-    method = Methods.method_heuristic_initial_clusters_max_dist
+    points = data[0]
+    solution = data[1]
 
-    points = chosen_points[0]
-    solution = chosen_points[1]
-    for punto in points:
-        p = GPoint(punto.x * displacement, punto.y * displacement)
+    for point in points:
+        p = GPoint(point.x * displacement, point.y * displacement)
         p.draw(win)
 
-    iteration_result = Methods.clustering(chosen_points, len(chosen_points[1]), 100, method)
+    iteration_result = Methods.clustering(points, len(points), max_iterations, method)
 
     clusters = iteration_result.clusters
 
@@ -81,21 +78,17 @@ def main():
     except:
         return 0
 
-def main_iterable ():
-    number_of_tries = 100
+
+def test_efficiency(data, max_iterations=100, times=100, method=Methods.method_heuristic_initial_clusters_max_dist):
     error_list = []
 
     time_start = time()
 
-    # Puntos elegidos
-    puntos_random = create_random_point_cloud(3, 1, 1, 10, 20)
-    chosen_points = puntos_random
-    method = Methods.method_random_initial_clusters
+    points = data[0]
+    solution = data[1]
 
-    for i in range(number_of_tries):
-        solution = chosen_points[1]
-
-        iteration_result = Methods.clustering(chosen_points, len(chosen_points[1]), 50, method)
+    for i in range(times):
+        iteration_result = Methods.clustering(points, len(points), max_iterations, method)
 
         clusters = iteration_result.clusters
 
@@ -105,16 +98,14 @@ def main_iterable ():
 
     time_end = time()
 
-    time_range = time_end-time_start
+    time_range = time_end - time_start
 
     print("-----------------------------")
-    print("Method used: "+get_method_name(method))
-    print("Results after "+str(number_of_tries)+" iterations:")
-    print("Total time: "+str(time_range)+" s")
-    print("Max error: "+str(max([item[1] for item in error_list])))
-    print("Min error: "+str(min([item[2] for item in error_list])))
-    print("Median error: "+str(mean([item[0] for item in error_list])))
+    print("Method used: " + get_method_name(method))
+    print("Results after " + str(max_iterations) + " iterations:")
+    print("Total time: " + str(time_range) + " s")
+    print("Max error: " + str(max([item[1] for item in error_list])))
+    print("Min error: " + str(min([item[2] for item in error_list])))
+    print("Median error: " + str(mean([item[0] for item in error_list])))
 
-main()
-
-#main_iterable()
+# PRUEBA
