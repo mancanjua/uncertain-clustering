@@ -436,18 +436,22 @@ def group_clusters(algorithm_result, solution):
         for key in keys:
             group_dictionary[key] = cluster_difference(key[0], key[1])
 
-    sorted(group_dictionary.keys(), key=group_dictionary.get)
+    sorted_dict = {k: v for k, v in sorted(group_dictionary.items(), key=lambda item: item[1])}
 
-    sorted_keys = group_dictionary.keys()
+    sorted_keys = list(sorted_dict.keys())
 
-    for key in sorted_keys:
+    while len(sorted_keys) != 0:
+        key = sorted_keys[0]
+
         grouped_clusters.append(key)
 
         selected_solution_cluster = key[1]
 
-        keys_to_delete = {(result_cluster, selected_solution_cluster) for result_cluster in result_copy}
+        keys_to_delete = [(result_cluster, selected_solution_cluster) for result_cluster in result_copy]
 
-        sorted_keys -= keys_to_delete
+        for key_to_delete in keys_to_delete:
+            if key_to_delete in sorted_keys:
+                sorted_keys.remove(key_to_delete)
 
     return grouped_clusters
 
