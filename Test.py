@@ -51,7 +51,7 @@ def get_method_name(method_number):
         return "Heuristic Initial Clusters w/ max distance"
 
 
-def test(points, solution = None, max_iterations=100, method=Methods.method_heuristic_initial_clusters_max_dist):
+def test(points, number_of_clusters, solution=None, max_iterations=100, method=Methods.method_heuristic_initial_clusters_max_dist):
     win = GraphWin("Results", 800, 600)
     displacement = 20
 
@@ -61,7 +61,7 @@ def test(points, solution = None, max_iterations=100, method=Methods.method_heur
         p = GPoint(point.x * displacement, point.y * displacement)
         p.draw(win)
 
-    iteration_result = Methods.clustering(points, len(solution), max_iterations, method)
+    iteration_result = Methods.clustering(points, number_of_clusters, max_iterations, method)
 
     clusters = iteration_result.clusters
 
@@ -91,13 +91,13 @@ def test(points, solution = None, max_iterations=100, method=Methods.method_heur
         return 0
 
 
-def test_efficiency(points, solution = None, max_iterations=100, times=100, method=Methods.method_heuristic_initial_clusters_max_dist):
+def test_efficiency(points, number_of_clusters, solution=None, max_iterations=100, times=100, method=Methods.method_heuristic_initial_clusters_max_dist):
     error_list = []
 
     time_start = time()
 
     for i in range(times):
-        iteration_result = Methods.clustering(points, len(solution), max_iterations, method)
+        iteration_result = Methods.clustering(points, number_of_clusters, max_iterations, method)
 
         if solution is not None:
 
@@ -114,26 +114,32 @@ def test_efficiency(points, solution = None, max_iterations=100, times=100, meth
     print("-----------------------------")
     print("Method used: " + get_method_name(method))
     print("Total time: " + str(time_range) + " s")
-    if len(solution) == 0:
-        print("Results after " + str(max_iterations) + " iterations:")
+    if solution is not None:
+        print("Results after " + str(times) + "runs and " + str(max_iterations) + " iterations each:")
         print("Max error: " + str(max([item[1] for item in error_list])))
         print("Min error: " + str(min([item[2] for item in error_list])))
         print("Median error: " + str(mean([item[0] for item in error_list])))
 
 
+# -------------- Parameters ----------------------------------------
 
-# chosen_data = puntos1
+chosen_data = puntos1
 # chosen_data = puntos2
-chosen_data = create_random_point_cloud(number_of_circles=3, noise=0.1, min_val=1, max_val=20, points_per_circle=20)
+# chosen_data = create_random_point_cloud(number_of_circles=3, noise=0.1, min_val=1, max_val=20, points_per_circle=20)
 
-# chosen_method = Methods.method_random_initial_clusters
+chosen_method = Methods.method_random_initial_clusters
 # chosen_method = Methods.method_heuristic_initial_clusters
-chosen_method = Methods.method_heuristic_initial_clusters_max_dist
+# chosen_method = Methods.method_heuristic_initial_clusters_max_dist
 
-# PRUEBA UNITARIA
+# -------------------------------------------------------------------
 
-test(points=chosen_data[0], solution=chosen_data[1], max_iterations=100, method=chosen_method)
+chosen_points = chosen_data[0]
+chosen_solution = chosen_data[1]
 
-# PRUEBA DE EFICIENCIA
+# ------------------------- PRUEBA UNITARIA -------------------------
 
-# test_efficiency(points=chosen_data[0], solution=chosen_data[1], max_iterations=50, times=100, method=chosen_method)
+# test(points=chosen_data[0], solution=chosen_data[1], number_of_clusters=len(chosen_data[1]), max_iterations=100, method=chosen_method)
+
+# -----------------------PRUEBA DE EFICIENCIA -----------------------
+
+test_efficiency(points=chosen_points, number_of_clusters=len(chosen_solution), solution=chosen_solution, max_iterations=50, times=100, method=chosen_method)
